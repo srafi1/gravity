@@ -78,7 +78,13 @@ class Planet {
 	float deltay = y - p.getY();
 	dx -= g*deltax/d/10000;
 	dy -= g*deltay/d/10000;
-	println(g + " " + deltax + " " + d);
+
+	if (dist(x, y, p.getX(), p.getY()) <= size + p.getSize()) {
+	    x -= dx;
+	    y -= dy;
+	    dx *= -.4;
+	    dy *= -.4;
+	}
     }
 
     void reposition(float nx, float ny) {
