@@ -1,0 +1,71 @@
+public class Planet {
+    private float x, y, dx, dy, size, mass;
+    private String color;
+
+    public Planet(float nx, float ny, float nsize, String ncolor) {
+	x = nx;
+	y = ny;
+	size = nsize;
+	dx = 0;
+	dy = 0;
+	mass = (float) (size*size*Math.PI);
+	color = ncolor;
+    }
+
+    public void move() {
+	x += dx;
+	y += dy;
+    }
+
+    public float getX() {
+	return x;
+    }
+
+    public float getY() {
+	return y;
+    }
+
+    public float getSize() {
+	return size;
+    }
+
+    public float getMass() {
+	return mass;
+    }
+
+    public void gravitate(Planet p) {
+	float m = mass*p.getMass();
+	float d = dist(x, y, p.getX(), p.getY());
+	float g = m/(d*d);
+	float deltax = x - p.getX();
+	float deltay = y - p.getY();
+	dx -= g*deltax/d/10000;
+	dy -= g*deltay/d/10000;
+
+	if (dist(x, y, p.getX(), p.getY()) <= size + p.getSize()) {
+	    x -= dx;
+	    y -= dy;
+	    dx *= -.4;
+	    dy *= -.4;
+	}
+    }
+
+    public void reposition(float nx, float ny) {
+	x = nx;
+	y = ny;
+    }
+    
+    public void bounceX() {    
+	x -= dx;
+	dx *= -0.1;
+    }
+    
+    public void bounceY() {    
+	y -= dy;
+	dy *= -0.1;
+    }
+
+    public String getColor() {
+	return color;
+    }
+}

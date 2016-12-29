@@ -1,95 +1,88 @@
-Planet p, mouseP;
+private Planet p, blackhole;
+private ArrayList<Planet> asteroids;
+private int score;
 
-void setup() {
-    size(600, 600);
+public void setup() {
+    size(displayWidth, displayHeight);
     noStroke();
-    p = new Planet(width/2, height/2, 20);
-    mouseP = new Planet(0, 0, 40);
+    p = new Planet(width/2, height/2, 20, color(100, 100, 255));
+    blackhole = new Planet(0, 0, 40, color(0, 0, 0));
+    asteroids = new ArrayList<Planet>();
+    score = 0;
 }
 
-void draw() {
+public void draw() {
     background(255);
-    if (mousePressed) {
-	p.gravitate(mouseP);
-	fill(200, 0, 0);
-	mouseP.draw();
+    if (frameCount % 120 == 0) spawnAsteroid();
+    blackhole.reposition(mouseX, mouseY);
+
+    //handle gravity
+    if (mousePressed) 
+	p.gravitate(blackhole);
+    for (int i = asteroids.size() - 1; i >= 0; i--) {
+	Planet a = asteroids.get(i);
+	if (a.getX() + a.getRadius() < 0 || a.getX() - a.getRadius() > width || a.getY() + a.getRadius() < 0 || a.getY() - a.getRadius() > width) {
+	    asteroids.remove(i);
+	    score++;
+	}
+	asteroids.get(i).gravitate(p);
+	if (mousePressed)
+	    asteroids.get(i).gravitate(blackhole);
+	p.gravitate(a);
+    }
+
+    //handle movement
+    for (Planet a : asteroids) {
+	a.move();
     }
     p.move();
+    if (p.getX() - p.getRadius() < 0 || p.getX() + p.getRadius() > width)
+	p.bounceX();
+    if (p.getY() - p.getRadius() < 0 || p.getY() + p.getRadius() > height)
+	p.bounceY();
 
-    fill(0);
-    p.draw();
-}
-
-void mouseDragged() {
-    mouseP.reposition(mouseX, mouseY);
-}
-
-class Planet {
-    float x, y, dx, dy, size, mass;
-
-    Planet(float nx, float ny, float nsize) {
-	x = nx;
-	y = ny;
-	size = nsize;
-	dx = 0;
-	dy = 0;
-	mass = (float) (size*size*Math.PI);
+    //handle collisions
+    if (checkCollision(blackhole, p) && mousePressed) {
+	reset();
+	return;
     }
-
-    void move() {
-	x += dx;
-	y += dy;
-
-	if (x - size < 0 || x + size > width) {
-	    x -= dx;
-	    dx *= -0.1;
+    for (Planet a : asteroids) {
+	if (checkCollision(a, p)) {
+	    reset();
+	    return;
 	}
-	if (y - size < 0 || y + size > height) {
-	    y -= dy;
-	    dy *= -0.1;
-	}
-    }
-
-    float getX() {
-	return x;
-    }
-
-    float getY() {
-	return y;
-    }
-
-    float getSize() {
-	return size;
-    }
-
-    float getMass() {
-	return mass;
-    }
-
-    void draw() {
-	ellipse(x, y, size*2, size*2);
-    }
-
-    void gravitate(Planet p) {
-	float m = mass*p.getMass();
-	float d = dist(x, y, p.getX(), p.getY());
-	float g = m/(d*d);
-	float deltax = x - p.getX();
-	float deltay = y - p.getY();
-	dx -= g*deltax/d/10000;
-	dy -= g*deltay/d/10000;
-
-	if (dist(x, y, p.getX(), p.getY()) <= size + p.getSize()) {
-	    x -= dx;
-	    y -= dy;
-	    dx *= -.4;
-	    dy *= -.4;
-	}
-    }
-
-    void reposition(float nx, float ny) {
-	x = nx;
-	y = ny;
     }
     
+    //handle rendering
+    drawPlanet(p);
+    for (Planet a : asteroids)
+	drawPlanet(a);
+    if (mousePressed)
+	drawPlanet(blackhole);
+}
+
+public void spawnAsteroid() {
+    float ax, ay;
+    do {
+	ax = random(width - 50) + 25;
+	ay = random(height - 50) + 25;
+    } while (dist(ax, ay, p.getX(), p.getY()) < 100);
+    Planet asteroid = new Planet(ax, ay, 20, color(180, 120, 50));
+    asteroids.add(asteroid);
+}
+
+public void drawPlanet(Planet pl) {
+    fill(pl.getColor());
+    ellipse(pl.getX(), pl.getY(), pl.getRadius()*2, pl.getRadius()*2);
+}
+
+public boolean checkCollision(Planet p1, Planet p2) {
+    return dist(p1.getX(), p1.getY(), p2.getX(), p2.getY()) <= p1.getRadius() + p2.getRadius();
+}
+
+public void reset() {
+    println(score);
+    score = 0;
+    p = new Planet(width/2, height/2, 20, color(100, 100, 255));
+    asteroids.clear();
 }
